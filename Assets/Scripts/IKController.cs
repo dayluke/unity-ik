@@ -11,6 +11,8 @@ public class IKController : IKBone
     public Transform target;
     public List<IKBone> allBones;
 
+    public List<Vector3> forwardReachPositions = new List<Vector3>();
+
     protected override void Awake()
     {
         base.Awake();
@@ -60,11 +62,13 @@ public class IKController : IKBone
 
     private void ForwardReach()
     {
+        Debug.Log("FORWARD REACHING...");
         Vector3 desiredJointPos = target.position;
 
         for (int i = allBones.Count - 1; i >= 0; i--)
         {
             IKBone boneOfInterest = allBones[i];
+            forwardReachPositions.Add(desiredJointPos);
 
             Vector3 firstJoint = boneOfInterest.jointPosition;
             Vector3 lastJoint = desiredJointPos;
@@ -83,6 +87,34 @@ public class IKController : IKBone
         }
 
         // if we didn't reach the start joint/root...
-        // BackwardReach();
+        BackwardReach();
+    }
+
+    private void BackwardReach()
+    {
+        Debug.Log("BACKWARD REACHING...");
+        forwardReachPositions.Reverse();
+        Vector3 desiredJointStart = rootPosition;
+
+        for (int i = 0; i < allBones.Count; i++)
+        {
+            IKBone boneOfInterest = allBones[i];
+
+            Vector3 firstJoint = desiredJointStart;
+            Vector3 lastJoint = forwardReachPositions[i];
+
+            Debug.Log("First Joint: " + firstJoint);
+            Debug.Log("Last Joint: " + lastJoint);
+
+            Vector3 unitDir = (lastJoint - firstJoint).normalized;
+            Debug.Log("Unit Direction: " + unitDir);
+
+            lastJoint = firstJoint + (unitDir * boneOfInterest.boneLength);
+            Debug.Log("New End Point: " + lastJoint);
+
+            Debug.DrawLine(firstJoint, lastJoint, Color.green, 1000);
+
+            desiredJointStart = lastJoint;
+        }
     }
 }
