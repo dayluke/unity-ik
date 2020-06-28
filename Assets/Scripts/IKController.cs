@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 
 // The gameObject which holds this controller will be the root.
 public class IKController : IKBone
@@ -20,6 +21,10 @@ public class IKController : IKBone
     {
         Debug.LogFormat("Total length of body is: {0}", GetTotalBodyLength());
         Debug.LogFormat("You {0} reach the target, currently.", CanReachTarget() ? "can" : "cannot");
+
+        if (CanReachTarget()) ForwardReach();
+
+
     }
 
     private bool CanReachTarget()
@@ -30,7 +35,8 @@ public class IKController : IKBone
 
     private float GetTotalBodyLength()
     {
-        GetAllBoneChildren(this.transform.parent); // Populates allBones list
+        // Populate allBones list
+        if (allBones.Count == 0) GetAllBoneChildren(this.transform.parent);
 
         float length = 0;
         allBones.ForEach(bone => length += bone.boneLength);
@@ -50,5 +56,33 @@ public class IKController : IKBone
 
             GetAllBoneChildren(child);
         }
+    }
+
+    private void ForwardReach()
+    {
+        Vector3 desiredJointPos = target.position;
+
+        for (int i = allBones.Count - 1; i >= 0; i--)
+        {
+            IKBone boneOfInterest = allBones[i];
+
+            Vector3 firstJoint = boneOfInterest.jointPosition;
+            Vector3 lastJoint = desiredJointPos;
+
+            Debug.Log("First Joint: " + firstJoint);
+            Debug.Log("Last Joint: " + lastJoint);
+            //Debug.DrawLine(firstJoint, lastJoint, Color.magenta, 1000);
+
+            Vector3 unitDir = (firstJoint - lastJoint).normalized;
+            Debug.Log("Unit Direction: " + unitDir);
+
+            desiredJointPos = lastJoint + (unitDir * boneOfInterest.boneLength);
+            Debug.Log("New End Point: " + desiredJointPos);
+
+            Debug.DrawLine(lastJoint, desiredJointPos, Color.yellow, 1000);
+        }
+
+        // if we didn't reach the start joint/root...
+        // BackwardReach();
     }
 }
