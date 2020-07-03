@@ -10,6 +10,13 @@ public class IKController : IKBone
     public Vector3 rootPosition; // also known as p0
     public Transform target;
     public List<IKBone> allBones;
+    public float marginOfError;
+    public bool reachedTarget;
+    private Vector3 prevTargetPos;
+
+    [Header("Debug Settings")]
+    public bool debug;
+    public bool debugLines;
 
     public List<Vector3> forwardReachPositions = new List<Vector3>();
 
@@ -17,6 +24,8 @@ public class IKController : IKBone
     {
         base.Awake();
         rootPosition = jointPosition;
+        reachedTarget = false;
+        prevTargetPos = target.position;
     }
 
     private void Start()
@@ -24,9 +33,27 @@ public class IKController : IKBone
         Debug.LogFormat("Total length of body is: {0}", GetTotalBodyLength());
         Debug.LogFormat("You {0} reach the target, currently.", CanReachTarget() ? "can" : "cannot");
 
-        if (CanReachTarget()) ForwardReach();
+        if (CanReachTarget() && !reachedTarget) ForwardReach();
+    }
 
-
+    private void Update()
+    {
+        if (CanReachTarget())
+        {
+            if (!reachedTarget || target.position != prevTargetPos)
+            {
+                ForwardReach();
+                prevTargetPos = target.position;
+            }
+            else
+            {
+                Debug.Log("Target has not moved. Or we have reached the target");
+            }
+        }
+        else
+        {
+            Debug.Log("The target is too far away.");
+        }
     }
 
     private bool CanReachTarget()
@@ -62,8 +89,9 @@ public class IKController : IKBone
 
     private void ForwardReach()
     {
-        Debug.Log("FORWARD REACHING...");
+        if (debug) Debug.Log("FORWARD REACHING...");
         Vector3 desiredJointPos = target.position;
+        forwardReachPositions.Clear();
 
         for (int i = allBones.Count - 1; i >= 0; i--)
         {
@@ -73,17 +101,17 @@ public class IKController : IKBone
             Vector3 firstJoint = boneOfInterest.jointPosition;
             Vector3 lastJoint = desiredJointPos;
 
-            Debug.Log("First Joint: " + firstJoint);
-            Debug.Log("Last Joint: " + lastJoint);
+            if (debug) Debug.Log("First Joint: " + firstJoint);
+            if (debug) Debug.Log("Last Joint: " + lastJoint);
             //Debug.DrawLine(firstJoint, lastJoint, Color.magenta, 1000);
 
             Vector3 unitDir = (firstJoint - lastJoint).normalized;
-            Debug.Log("Unit Direction: " + unitDir);
+            if (debug) Debug.Log("Unit Direction: " + unitDir);
 
             desiredJointPos = lastJoint + (unitDir * boneOfInterest.boneLength);
-            Debug.Log("New End Point: " + desiredJointPos);
+            if (debug) Debug.Log("New End Point: " + desiredJointPos);
 
-            Debug.DrawLine(lastJoint, desiredJointPos, Color.yellow, 1000);
+            if (debugLines) Debug.DrawLine(lastJoint, desiredJointPos, Color.yellow, Time.deltaTime);
         }
 
         // if we didn't reach the start joint/root...
@@ -92,7 +120,7 @@ public class IKController : IKBone
 
     private void BackwardReach()
     {
-        Debug.Log("BACKWARD REACHING...");
+        if (debug) Debug.Log("BACKWARD REACHING...");
         forwardReachPositions.Reverse();
         Vector3 desiredJointStart = rootPosition;
 
@@ -103,18 +131,31 @@ public class IKController : IKBone
             Vector3 firstJoint = desiredJointStart;
             Vector3 lastJoint = forwardReachPositions[i];
 
-            Debug.Log("First Joint: " + firstJoint);
-            Debug.Log("Last Joint: " + lastJoint);
+            if (debug) Debug.Log("First Joint: " + firstJoint);
+            if (debug) Debug.Log("Last Joint: " + lastJoint);
 
             Vector3 unitDir = (lastJoint - firstJoint).normalized;
-            Debug.Log("Unit Direction: " + unitDir);
+            if (debug) Debug.Log("Unit Direction: " + unitDir);
 
             lastJoint = firstJoint + (unitDir * boneOfInterest.boneLength);
-            Debug.Log("New End Point: " + lastJoint);
+            if (debug) Debug.Log("New End Point: " + lastJoint);
 
-            Debug.DrawLine(firstJoint, lastJoint, Color.green, 1000);
+            if (debugLines) Debug.DrawLine(firstJoint, lastJoint, Color.green, Time.deltaTime);
 
             desiredJointStart = lastJoint;
+
+            boneOfInterest.UpdateJointRotation(lastJoint);
+            boneOfInterest.UpdateJointPosition(firstJoint);
         }
+
+        if (CalculateMarginOfError(forwardReachPositions[allBones.Count - 1], target.position) < marginOfError)
+        {
+            reachedTarget = true;
+        }
+    }
+
+    private float CalculateMarginOfError(Vector3 lastJoint, Vector3 goal)
+    {
+        return (lastJoint - goal).magnitude;
     }
 }
