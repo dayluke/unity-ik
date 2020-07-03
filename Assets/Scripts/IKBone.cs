@@ -17,4 +17,27 @@ public class IKBone : MonoBehaviour
         Vector3 jointPos = this.transform.position - (transform.right * (boneLength / 2));
         return jointPos;
     }
+
+    public void UpdateJointPosition(Vector3 newPos)
+    {
+        this.transform.parent.position = newPos;
+    }
+
+    public void UpdateJointRotation(Vector3 targetPos)
+    {
+        float angle = 180 + AngleInDeg(targetPos, transform.parent.position);
+        // Debug.Log(angle);
+        // this.transform.parent.RotateAround(jointPosition, Vector3.forward, angle);
+        
+        Vector3 desiredRot = new Vector3(transform.parent.rotation.x, transform.parent.rotation.y, angle);
+        transform.parent.rotation = Quaternion.Euler(desiredRot);
+    }
+
+    private float AngleInRad(Vector3 vec1, Vector3 vec2) {
+        return Mathf.Atan2(vec2.y - vec1.y, vec2.x - vec1.x);
+    }
+
+    private float AngleInDeg(Vector3 vec1, Vector3 vec2) {
+        return AngleInRad(vec1, vec2) * 180 / Mathf.PI;
+    }
 }
