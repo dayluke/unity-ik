@@ -4,35 +4,23 @@ public class IKBone : MonoBehaviour
 {
     [Header("IK Bone")]
     public float boneLength;
-    public Vector3 jointPosition;
+    public Transform joint;
 
     protected virtual void Awake()
     {
         boneLength = this.GetComponent<BoxCollider>().bounds.size.x;
-        jointPosition = GetJointPosition();
-    }
-
-    protected Vector3 GetJointPosition()
-    {
-        Vector3 jointPos = this.transform.position - (transform.right * (boneLength / 2));
-        return jointPos;
+        joint = this.transform.parent;
     }
 
     public void UpdateJointPosition(Vector3 newPos)
     {
-        this.transform.parent.position = newPos;
+        joint.position = newPos;
     }
 
     public void UpdateJointRotation(Vector3 targetPos)
     {
-        transform.parent.LookAt(targetPos);
-        transform.parent.RotateAround(transform.parent.position, transform.parent.up, -90);
-
-        /* Old rotation method
-        float angle = 180 + AngleInDeg(targetPos, transform.parent.position);        
-        Vector3 desiredRot = new Vector3(transform.parent.rotation.x, transform.parent.rotation.y, angle);
-        transform.parent.rotation = Quaternion.Euler(desiredRot);
-        */
+        joint.LookAt(targetPos);
+        joint.RotateAround(joint.position, joint.up, -90);
     }
 
     private float AngleInRad(Vector3 vec1, Vector3 vec2)

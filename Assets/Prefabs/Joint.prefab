@@ -107,7 +107,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boneLength: 0
-  jointPosition: {x: 0, y: 0, z: 0}
+  joint: {fileID: 6083697861865810070}
 --- !u!1 &6083697861865810065
 GameObject:
   m_ObjectHideFlags: 0
