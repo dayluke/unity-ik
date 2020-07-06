@@ -1,13 +1,10 @@
-﻿using System.Linq;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using System;
 
 // The gameObject which holds this controller will be the root.
 public class IKController : IKBone
 {
     [Header("IK Controller")]
-    public Vector3 rootPosition; // also known as p0
     public Transform target;
     public List<IKBone> allBones;
     public float marginOfError;
@@ -23,7 +20,6 @@ public class IKController : IKBone
     protected override void Awake()
     {
         base.Awake();
-        rootPosition = jointPosition;
         reachedTarget = false;
         prevTargetPos = target.position;
     }
@@ -59,7 +55,7 @@ public class IKController : IKBone
 
     private bool CanReachTarget()
     {
-        float distance  = (target.position - rootPosition).magnitude;
+        float distance  = (target.position - this.joint.position).magnitude;
         return distance <= GetTotalBodyLength();
     }
 
@@ -113,7 +109,7 @@ public class IKController : IKBone
             IKBone boneOfInterest = allBones[i];
             forwardReachPositions.Add(desiredJointPos);
 
-            Vector3 firstJoint = boneOfInterest.jointPosition;
+            Vector3 firstJoint = boneOfInterest.joint.position;
             Vector3 lastJoint = desiredJointPos;
 
             if (debug) Debug.Log("First Joint: " + firstJoint);
@@ -137,7 +133,7 @@ public class IKController : IKBone
     {
         if (debug) Debug.Log("BACKWARD REACHING...");
         forwardReachPositions.Reverse();
-        Vector3 desiredJointStart = rootPosition;
+        Vector3 desiredJointStart = this.joint.position;
 
         for (int i = 0; i < allBones.Count; i++)
         {
