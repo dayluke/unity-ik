@@ -25,19 +25,23 @@ public class IKBone : MonoBehaviour
 
     public void UpdateJointRotation(Vector3 targetPos)
     {
-        float angle = 180 + AngleInDeg(targetPos, transform.parent.position);
-        // Debug.Log(angle);
-        // this.transform.parent.RotateAround(jointPosition, Vector3.forward, angle);
-        
+        transform.parent.LookAt(targetPos);
+        transform.parent.RotateAround(transform.parent.position, transform.parent.up, -90);
+
+        /* Old rotation method
+        float angle = 180 + AngleInDeg(targetPos, transform.parent.position);        
         Vector3 desiredRot = new Vector3(transform.parent.rotation.x, transform.parent.rotation.y, angle);
         transform.parent.rotation = Quaternion.Euler(desiredRot);
+        */
     }
 
-    private float AngleInRad(Vector3 vec1, Vector3 vec2) {
+    private float AngleInRad(Vector3 vec1, Vector3 vec2)
+    {
         return Mathf.Atan2(vec2.y - vec1.y, vec2.x - vec1.x);
     }
 
-    private float AngleInDeg(Vector3 vec1, Vector3 vec2) {
+    private float AngleInDeg(Vector3 vec1, Vector3 vec2)
+    {
         return AngleInRad(vec1, vec2) * 180 / Mathf.PI;
     }
 }
