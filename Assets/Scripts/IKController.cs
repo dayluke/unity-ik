@@ -34,6 +34,7 @@ public class IKController : IKBone
         Debug.LogFormat("You {0} reach the target, currently.", CanReachTarget() ? "can" : "cannot");
 
         if (CanReachTarget() && !reachedTarget) ForwardReach();
+        else StretchTowardTarget();
     }
 
     private void Update()
@@ -52,7 +53,7 @@ public class IKController : IKBone
         }
         else
         {
-            Debug.Log("The target is too far away.");
+            StretchTowardTarget();
         }
     }
 
@@ -84,6 +85,20 @@ public class IKController : IKBone
             if (childBone) allBones.Add(childBone);
 
             GetAllBoneChildren(child);
+        }
+    }
+
+    private void StretchTowardTarget()
+    {
+        allBones[0].UpdateJointRotation(target.position);
+
+        for (int i = 1; i < allBones.Count; i++)
+        {
+            IKBone boneOfInterest = allBones[i];
+            
+            // the below line won't work for bones of varying length.
+            boneOfInterest.transform.parent.localPosition = Vector3.right * i * boneOfInterest.boneLength;
+            boneOfInterest.transform.parent.localRotation = Quaternion.Euler(0, 0, 0);
         }
     }
 
